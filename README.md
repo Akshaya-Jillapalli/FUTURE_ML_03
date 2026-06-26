@@ -1,2 +1,11 @@
-# FUTURE_ML_03
-A sleek, responsive single‑page showcase for an NLP project that screens resumes, extracts skills, compares them with job descriptions, ranks candidates by fit, and highlights missing skills. Features SaaS‑style UI, smooth animations, interactive demo, and professional dashboard design.
+
+  # Machine Learning Project Website
+
+  This is a code bundle for Machine Learning Project Website. The original project is available at https://www.figma.com/design/oh74VNFdbV8jvTNR5mGYPY/Machine-Learning-Project-Website.
+
+  ## Running the code
+
+  Run `npm i` to install the dependencies.
+
+  Run `npm run dev` to start the development server.
+  
