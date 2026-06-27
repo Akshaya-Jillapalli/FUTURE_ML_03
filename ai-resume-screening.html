@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Resume Screening & Candidate Ranking System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-900: #0f1f4b;
+      --blue-700: #1a3a8c;
+      --blue-500: #2563eb;
+      --blue-400: #3b82f6;
+      --blue-300: #93c5fd;
+      --purple-700: #6d28d9;
+      --purple-500: #8b5cf6;
+      --purple-300: #c4b5fd;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --grad-hero: linear-gradient(135deg, #0f1f4b 0%, #1a1060 50%, #0f1f4b 100%);
+      --grad-accent: linear-gradient(135deg, #2563eb, #8b5cf6);
+      --grad-card: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(139,92,246,0.08));
+      --glass-bg: rgba(255,255,255,0.07);
+      --glass-border: rgba(255,255,255,0.15);
+      --shadow-lg: 0 20px 60px rgba(0,0,0,0.25);
+      --shadow-card: 0 4px 24px rgba(37,99,235,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(15,31,75,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+      transition: background 0.3s;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 1.05rem; color: #fff;
+      text-decoration: none;
+    }
+    .nav-brand .brand-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--grad-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; color: #fff;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: rgba(255,255,255,0.75); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      background: var(--grad-accent); color: #fff;
+      padding: 0.45rem 1.25rem; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600;
+      text-decoration: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 2px; background: #fff; border-radius: 2px; transition: 0.3s; }
+    .mobile-menu {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(15,31,75,0.97); backdrop-filter: blur(20px);
+      padding: 1.5rem 2rem; z-index: 999;
+      flex-direction: column; gap: 1rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 1rem; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      background: var(--grad-hero);
+      display: flex; align-items: center;
+      padding: 100px 2rem 60px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(139,92,246,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse at 20% 80%, rgba(37,99,235,0.15) 0%, transparent 60%);
+    }
+    .hero-grid {
+      max-width: 1200px; margin: auto; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4);
+      color: var(--purple-300); padding: 0.4rem 1rem; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;
+      color: #fff; line-height: 1.2; margin-bottom: 1.25rem;
+    }
+    .hero h1 span { background: var(--grad-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub {
+      color: rgba(255,255,255,0.65); font-size: 1.05rem;
+      line-height: 1.7; margin-bottom: 2rem; max-width: 500px;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--grad-accent); color: #fff;
+      padding: 0.8rem 1.8rem; border-radius: 10px;
+      font-weight: 600; font-size: 0.95rem;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(139,92,246,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(139,92,246,0.5); }
+    .btn-outline {
+      background: transparent; color: #fff;
+      padding: 0.8rem 1.8rem; border-radius: 10px;
+      font-weight: 600; font-size: 0.95rem;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.5); }
+    .hero-stats { display: flex; gap: 2rem; margin-top: 2.5rem; }
+    .hero-stat { }
+    .hero-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .hero-stat .label { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    /* Dashboard illustration */
+    .hero-visual { position: relative; }
+    .dashboard-mock {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-lg);
+    }
+    .mock-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 1.2rem;
+      padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mock-title { color: rgba(255,255,255,0.7); font-size: 0.8rem; font-weight: 600; margin-left: 4px; }
+    .mock-candidates { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.2rem; }
+    .mock-candidate {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mock-rank {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .rank-1 { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .rank-2 { background: linear-gradient(135deg,#6b7280,#9ca3af); }
+    .rank-3 { background: linear-gradient(135deg,#92400e,#b45309); }
+    .mock-name { color: rgba(255,255,255,0.85); font-size: 0.8rem; font-weight: 600; flex: 1; }
+    .mock-role { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+    .mock-score-bar { flex: 1; }
+    .score-track { height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 10px; background: var(--grad-accent); }
+    .mock-pct { color: rgba(255,255,255,0.7); font-size: 0.75rem; font-weight: 700; min-width: 38px; text-align: right; }
+    .mock-skills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .skill-chip {
+      background: rgba(37,99,235,0.25); border: 1px solid rgba(37,99,235,0.4);
+      color: var(--blue-300); font-size: 0.68rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 100px;
+    }
+    .skill-chip.missing {
+      background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5;
+    }
+    .float-card {
+      position: absolute; background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 0.75rem 1rem;
+      backdrop-filter: blur(10px); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .float-card-1 { top: -24px; right: -20px; }
+    .float-card-2 { bottom: -20px; left: -20px; }
+    .float-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+    .float-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .float-sub { font-size: 0.65rem; color: var(--purple-300); }
+
+    /* ─── SECTIONS SHARED ─── */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1200px; margin: auto; width: 100%; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--blue-500); font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 700;
+      color: var(--gray-800); line-height: 1.25; margin-bottom: 1rem;
+    }
+    .section-title span { background: var(--grad-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-sub { color: var(--gray-600); font-size: 1rem; line-height: 1.7; max-width: 600px; }
+    .section-header { margin-bottom: 3rem; }
+    .section-header.center { text-align: center; }
+    .section-header.center .section-sub { margin: auto; }
+
+    /* ─── ABOUT ─── */
+    .about { background: var(--white); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .about-features { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+    .feature-item {
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); padding: 1.2rem;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+    .feature-item:hover { border-color: var(--blue-400); box-shadow: var(--shadow-card); transform: translateY(-3px); }
+    .feature-icon {
+      width: 38px; height: 38px; border-radius: 9px;
+      background: var(--grad-accent); display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.9rem; margin-bottom: 0.75rem;
+    }
+    .feature-item h4 { font-size: 0.85rem; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+    .feature-item p { font-size: 0.78rem; color: var(--gray-600); line-height: 1.5; }
+    .about-visual {
+      background: var(--grad-hero);
+      border-radius: 20px; padding: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .about-visual::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(139,92,246,0.2);
+    }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; position: relative; z-index:1; }
+    .stat-box {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm); padding: 1.25rem;
+      text-align: center; transition: background 0.3s;
+    }
+    .stat-box:hover { background: rgba(255,255,255,0.12); }
+    .stat-box .big { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: #fff; }
+    .stat-box .lbl { font-size: 0.75rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
+
+    /* ─── WORKFLOW ─── */
+    .workflow { background: var(--gray-50); }
+    .workflow-steps {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+      position: relative; margin-top: 1rem;
+    }
+    .workflow-steps::before {
+      content: ''; position: absolute; top: 38px; left: 10%; right: 10%;
+      height: 2px; background: linear-gradient(90deg, var(--blue-500), var(--purple-500));
+      z-index: 0;
+    }
+    .workflow-row2 { margin-top: 2rem; }
+    .step-item {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative; z-index: 1;
+    }
+    .step-circle {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: var(--white); border: 3px solid var(--blue-400);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: var(--blue-500);
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.15);
+    }
+    .step-item:hover .step-circle {
+      background: var(--grad-accent); border-color: transparent;
+      color: #fff; transform: scale(1.08);
+      box-shadow: 0 8px 24px rgba(37,99,235,0.35);
+    }
+    .step-item:nth-child(n+6) .step-circle { border-color: var(--purple-500); color: var(--purple-500); }
+    .step-item:nth-child(n+6):hover .step-circle { background: linear-gradient(135deg, var(--purple-700), var(--blue-500)); }
+    .step-item h4 { font-size: 0.78rem; font-weight: 700; color: var(--gray-800); }
+    .step-item p { font-size: 0.7rem; color: var(--gray-400); margin-top: 3px; max-width: 100px; }
+    .step-num {
+      font-size: 0.65rem; font-weight: 800; color: var(--blue-400);
+      letter-spacing: 0.05em; margin-bottom: 4px;
+    }
+
+    /* ─── RESULTS ─── */
+    .results { background: var(--white); }
+    .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2.5rem; }
+    .metric-card {
+      background: var(--grad-hero); border-radius: var(--radius); padding: 1.5rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .metric-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .metric-card::before {
+      content: ''; position: absolute; top: -30px; right: -30px;
+      width: 100px; height: 100px; border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .metric-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: var(--purple-300); margin-bottom: 1rem;
+    }
+    .metric-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: #fff; }
+    .metric-label { font-size: 0.78rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
+    .metric-trend { font-size: 0.72rem; margin-top: 0.75rem; display: flex; align-items: center; gap: 4px; }
+    .trend-up { color: #4ade80; }
+
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+    .chart-card {
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow-card);
+      transition: box-shadow 0.3s;
+    }
+    .chart-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.15); }
+    .chart-card h3 { font-size: 0.9rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1.25rem; }
+    .bar-chart { display: flex; flex-direction: column; gap: 14px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-name { font-size: 0.78rem; color: var(--gray-600); min-width: 110px; }
+    .bar-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
+    .bar-pct { font-size: 0.75rem; font-weight: 700; color: var(--gray-800); min-width: 36px; text-align: right; }
+    .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .donut-svg { width: 140px; height: 140px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--gray-600); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── DEMO ─── */
+    .demo { background: linear-gradient(135deg, #0f1f4b 0%, #1a1060 100%); }
+    .demo .section-title { color: #fff; }
+    .demo .section-sub { color: rgba(255,255,255,0.6); }
+    .demo .section-label { color: var(--purple-300); }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .demo-input-card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius); padding: 1.75rem;
+      backdrop-filter: blur(10px);
+    }
+    .demo-input-card h3 { font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+    .demo-textarea {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;
+      line-height: 1.6; width: 100%; resize: none; font-family: inherit;
+      min-height: 120px;
+    }
+    .demo-label { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.5rem; margin-top: 1rem; }
+    .demo-select option, .demo-select optgroup { background: #1a1060; color: rgba(255,255,255,0.85); }
+    .demo-select optgroup { color: var(--purple-300); font-size: 0.72rem; letter-spacing: 0.05em; }
+    .demo-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 0.7rem 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;
+      width: 100%; font-family: inherit; cursor: pointer; appearance: auto; }
+    .demo-btn {
+      margin-top: 1.25rem; width: 100%; padding: 0.85rem;
+      background: var(--grad-accent); color: #fff; border: none;
+      border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 4px 20px rgba(139,92,246,0.4);
+    }
+    .demo-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+
+    .result-card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius); padding: 1.75rem;
+      backdrop-filter: blur(10px);
+    }
+    .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .result-header h3 { font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; }
+    .status-badge {
+      background: rgba(74,222,128,0.2); border: 1px solid rgba(74,222,128,0.4);
+      color: #4ade80; font-size: 0.72rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 100px;
+    }
+    .score-ring { display: flex; justify-content: center; margin: 1rem 0 1.5rem; }
+    .ring-svg { width: 130px; height: 130px; }
+    .result-rows { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.25rem; }
+    .result-row { display: flex; align-items: center; justify-content: space-between; }
+    .result-row-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; }
+    .result-row-val { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .skills-section { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.25rem; }
+    .skills-section h4 { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .skills-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+
+    /* ─── TECH STACK ─── */
+    .tech { background: var(--gray-50); }
+    .tech-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .tech-card {
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius); padding: 1.5rem;
+      display: flex; align-items: flex-start; gap: 1rem;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    }
+    .tech-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); border-color: var(--blue-300); }
+    .tech-icon {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .tech-card h4 { font-size: 0.9rem; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+    .tech-card p { font-size: 0.8rem; color: var(--gray-600); line-height: 1.5; }
+    .tech-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .tag { font-size: 0.68rem; font-weight: 600; padding: 3px 9px; border-radius: 100px; }
+    .tag-blue { background: rgba(37,99,235,0.1); color: var(--blue-500); }
+    .tag-purple { background: rgba(139,92,246,0.1); color: var(--purple-500); }
+    .tag-green { background: rgba(16,185,129,0.1); color: #059669; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--blue-900); color: rgba(255,255,255,0.5);
+      padding: 2.5rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-inner {
+      max-width: 1200px; margin: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand .icon { width: 30px; height: 30px; border-radius: 7px; background: var(--grad-accent); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #fff; }
+    .footer-brand span { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .footer-copy { font-size: 0.8rem; }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ─── SCROLL REVEAL ─── */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .workflow-steps { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+      .workflow-steps::before { display: none; }
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; text-align: center; }
+      .hero-sub { margin: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { order: -1; }
+      .float-card-1, .float-card-2 { display: none; }
+      .about-grid { grid-template-columns: 1fr; }
+      .about-features { grid-template-columns: 1fr; }
+      .results-grid { grid-template-columns: 1fr 1fr; }
+      .demo-grid { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+      .workflow-steps { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .results-grid { grid-template-columns: 1fr; }
+      .hero-stats { flex-wrap: wrap; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="navbar">
+  <a href="#hero" class="nav-brand">
+    <div class="brand-icon"><i class="fa-solid fa-brain"></i></div>
+    ResumeAI
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#workflow">Workflow</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#tech">Tech Stack</a></li>
+  </ul>
+  <a href="#demo" class="nav-cta">Try Demo</a>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#about" onclick="toggleMenu()">About</a>
+  <a href="#workflow" onclick="toggleMenu()">Workflow</a>
+  <a href="#results" onclick="toggleMenu()">Results</a>
+  <a href="#demo" onclick="toggleMenu()">Demo</a>
+  <a href="#tech" onclick="toggleMenu()">Tech Stack</a>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero" id="hero">
+  <div class="hero-grid">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fa-solid fa-sparkles"></i> NLP-Powered Recruitment Intelligence</div>
+      <h1>AI-Powered <span>Resume Screening</span> & Candidate Ranking</h1>
+      <p class="hero-sub">Automatically analyze resumes, extract skills, compare candidates with job descriptions, and rank applicants using Machine Learning and Natural Language Processing.</p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary"><i class="fa-solid fa-play"></i> Try Live Demo</a>
+        <a href="#workflow" class="btn-outline"><i class="fa-solid fa-diagram-project"></i> View Workflow</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num" data-count="91">0%</div>
+          <div class="label">Avg Match Score</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-count="500">0+</div>
+          <div class="label">Resumes / min</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-count="98">0%</div>
+          <div class="label">Accuracy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="float-card float-card-1">
+        <div class="float-label">Top Match</div>
+        <div class="float-val">91%</div>
+        <div class="float-sub"><i class="fa-solid fa-arrow-trend-up"></i> Highly Recommended</div>
+      </div>
+      <div class="dashboard-mock">
+        <div class="mock-header">
+          <div class="mock-dot" style="background:#ef4444"></div>
+          <div class="mock-dot" style="background:#f59e0b"></div>
+          <div class="mock-dot" style="background:#4ade80"></div>
+          <span class="mock-title">Candidate Ranking — ML Engineer</span>
+        </div>
+        <div class="mock-candidates">
+          <div class="mock-candidate">
+            <div class="mock-rank rank-1">1</div>
+            <div style="flex:1">
+              <div class="mock-name">Arjun Sharma</div>
+              <div class="mock-role">Python · ML · NLP · TensorFlow</div>
+            </div>
+            <div class="mock-score-bar">
+              <div class="score-track"><div class="score-fill" style="width:91%"></div></div>
+            </div>
+            <div class="mock-pct">91%</div>
+          </div>
+          <div class="mock-candidate">
+            <div class="mock-rank rank-2">2</div>
+            <div style="flex:1">
+              <div class="mock-name">Priya Mehta</div>
+              <div class="mock-role">Python · SQL · Data Science</div>
+            </div>
+            <div class="mock-score-bar">
+              <div class="score-track"><div class="score-fill" style="width:78%"></div></div>
+            </div>
+            <div class="mock-pct">78%</div>
+          </div>
+          <div class="mock-candidate">
+            <div class="mock-rank rank-3">3</div>
+            <div style="flex:1">
+              <div class="mock-name">Rahul Verma</div>
+              <div class="mock-role">Deep Learning · PyTorch</div>
+            </div>
+            <div class="mock-score-bar">
+              <div class="score-track"><div class="score-fill" style="width:65%"></div></div>
+            </div>
+            <div class="mock-pct">65%</div>
+          </div>
+        </div>
+        <div class="mock-skills">
+          <span class="skill-chip">Python</span>
+          <span class="skill-chip">TensorFlow</span>
+          <span class="skill-chip">NLP</span>
+          <span class="skill-chip">SQL</span>
+          <span class="skill-chip missing">Docker</span>
+          <span class="skill-chip missing">AWS</span>
+        </div>
+      </div>
+      <div class="float-card float-card-2">
+        <div class="float-label">Skills Extracted</div>
+        <div class="float-val">12</div>
+        <div class="float-sub">2 missing skills found</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section class="about" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="section-header reveal">
+          <div class="section-label"><i class="fa-solid fa-circle-info"></i> About the Project</div>
+          <h2 class="section-title">Intelligent Resume<br/><span>Screening with NLP</span></h2>
+          <p class="section-sub">This system helps recruiters automate candidate evaluation using Natural Language Processing. It extracts skills, computes similarity scores, and ranks applicants — reducing manual effort by over 80%.</p>
+        </div>
+        <div class="about-features">
+          <div class="feature-item reveal reveal-delay-1">
+            <div class="feature-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <h4>Resume Parsing</h4>
+            <p>Extract structured text from PDF and DOCX resumes automatically</p>
+          </div>
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <h4>Skill Extraction</h4>
+            <p>Identify technical and soft skills using Named Entity Recognition</p>
+          </div>
+          <div class="feature-item reveal reveal-delay-1">
+            <div class="feature-icon"><i class="fa-solid fa-percentage"></i></div>
+            <h4>Similarity Scoring</h4>
+            <p>TF-IDF + Cosine Similarity to compute resume–JD match score</p>
+          </div>
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon"><i class="fa-solid fa-ranking-star"></i></div>
+            <h4>Candidate Ranking</h4>
+            <p>Sort all applicants by fit score and surface the best matches</p>
+          </div>
+          <div class="feature-item reveal reveal-delay-1">
+            <div class="feature-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Skill Gap Analysis</h4>
+            <p>Pinpoint missing skills so recruiters know what to probe in interviews</p>
+          </div>
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <h4>Visual Reports</h4>
+            <p>Dashboard-style analytics charts for hiring managers at a glance</p>
+          </div>
+        </div>
+      </div>
+      <div class="about-visual reveal">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="big" data-count="80">0</div>
+            <div class="lbl">% Time Saved</div>
+          </div>
+          <div class="stat-box">
+            <div class="big" data-count="98">0</div>
+            <div class="lbl">% Accuracy</div>
+          </div>
+          <div class="stat-box">
+            <div class="big" data-count="12">0</div>
+            <div class="lbl">ML Models Used</div>
+          </div>
+          <div class="stat-box">
+            <div class="big" data-count="5000">0</div>
+            <div class="lbl">Resumes Tested</div>
+          </div>
+        </div>
+        <div style="margin-top:1.5rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:1rem;">
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.06em;">Core Libraries</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="skill-chip">scikit-learn</span>
+            <span class="skill-chip">spaCy</span>
+            <span class="skill-chip">NLTK</span>
+            <span class="skill-chip">pandas</span>
+            <span class="skill-chip">PyMuPDF</span>
+            <span class="skill-chip">TF-IDF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WORKFLOW ── -->
+<section class="workflow" id="workflow">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-label"><i class="fa-solid fa-diagram-project"></i> ML Pipeline</div>
+      <h2 class="section-title">Machine Learning <span>Workflow</span></h2>
+      <p class="section-sub">A streamlined NLP pipeline that transforms raw resume text into ranked, actionable candidate insights.</p>
+    </div>
+
+    <div class="workflow-steps">
+      <div class="step-item reveal">
+        <div class="step-num">STEP 01</div>
+        <div class="step-circle"><i class="fa-solid fa-upload"></i></div>
+        <h4>Resume Upload</h4>
+        <p>PDF / DOCX input</p>
+      </div>
+      <div class="step-item reveal reveal-delay-1">
+        <div class="step-num">STEP 02</div>
+        <div class="step-circle"><i class="fa-solid fa-file-code"></i></div>
+        <h4>Text Extraction</h4>
+        <p>PyMuPDF / pdfplumber</p>
+      </div>
+      <div class="step-item reveal reveal-delay-2">
+        <div class="step-num">STEP 03</div>
+        <div class="step-circle"><i class="fa-solid fa-broom"></i></div>
+        <h4>Text Cleaning</h4>
+        <p>Stopword removal</p>
+      </div>
+      <div class="step-item reveal reveal-delay-3">
+        <div class="step-num">STEP 04</div>
+        <div class="step-circle"><i class="fa-solid fa-scissors"></i></div>
+        <h4>Tokenization</h4>
+        <p>spaCy / NLTK</p>
+      </div>
+      <div class="step-item reveal reveal-delay-3">
+        <div class="step-num">STEP 05</div>
+        <div class="step-circle"><i class="fa-solid fa-tags"></i></div>
+        <h4>Skill Extraction</h4>
+        <p>NER &amp; pattern match</p>
+      </div>
+    </div>
+    <div class="workflow-steps workflow-row2">
+      <div class="step-item reveal">
+        <div class="step-num">STEP 06</div>
+        <div class="step-circle"><i class="fa-solid fa-briefcase"></i></div>
+        <h4>JD Parsing</h4>
+        <p>Job description NLP</p>
+      </div>
+      <div class="step-item reveal reveal-delay-1">
+        <div class="step-num">STEP 07</div>
+        <div class="step-circle"><i class="fa-solid fa-vector-square"></i></div>
+        <h4>TF-IDF Vectors</h4>
+        <p>Feature engineering</p>
+      </div>
+      <div class="step-item reveal reveal-delay-2">
+        <div class="step-num">STEP 08</div>
+        <div class="step-circle"><i class="fa-solid fa-calculator"></i></div>
+        <h4>Similarity Score</h4>
+        <p>Cosine similarity</p>
+      </div>
+      <div class="step-item reveal reveal-delay-3">
+        <div class="step-num">STEP 09</div>
+        <div class="step-circle"><i class="fa-solid fa-trophy"></i></div>
+        <h4>Candidate Ranking</h4>
+        <p>Sorted by fit score</p>
+      </div>
+      <div class="step-item reveal reveal-delay-3">
+        <div class="step-num">STEP 10</div>
+        <div class="step-circle"><i class="fa-solid fa-chart-bar"></i></div>
+        <h4>Skill Gap Report</h4>
+        <p>Missing skills flagged</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── RESULTS ── -->
+<section class="results" id="results">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label"><i class="fa-solid fa-chart-line"></i> Results & Evaluation</div>
+      <h2 class="section-title">Analytics <span>Dashboard</span></h2>
+      <p class="section-sub">Live metrics from resume screening runs across various job roles, demonstrating model performance and ranking accuracy.</p>
+    </div>
+
+    <div class="results-grid">
+      <div class="metric-card reveal">
+        <div class="metric-icon"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="metric-value" data-count="91">0%</div>
+        <div class="metric-label">Avg Resume Match Score</div>
+        <div class="metric-trend trend-up"><i class="fa-solid fa-arrow-up"></i> +6% vs last batch</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-1">
+        <div class="metric-icon"><i class="fa-solid fa-wave-square"></i></div>
+        <div class="metric-value" data-count="87">0%</div>
+        <div class="metric-label">Cosine Similarity Score</div>
+        <div class="metric-trend trend-up"><i class="fa-solid fa-arrow-up"></i> +3% from baseline</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-2">
+        <div class="metric-icon"><i class="fa-solid fa-code-branch"></i></div>
+        <div class="metric-value" data-count="12">0</div>
+        <div class="metric-label">Avg Skills Extracted</div>
+        <div class="metric-trend trend-up"><i class="fa-solid fa-check"></i> Per resume</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-3">
+        <div class="metric-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+        <div class="metric-value" data-count="2">0</div>
+        <div class="metric-label">Avg Missing Skills</div>
+        <div class="metric-trend" style="color:#fbbf24"><i class="fa-solid fa-triangle-exclamation"></i> Skill gap detected</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card reveal">
+        <h3><i class="fa-solid fa-ranking-star" style="color:var(--blue-500);margin-right:8px"></i>Candidate Ranking — ML Engineer Role</h3>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-name">Arjun Sharma</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2563eb,#8b5cf6)" data-width="91"></div></div>
+            <span class="bar-pct">91%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Priya Mehta</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2563eb,#8b5cf6)" data-width="78"></div></div>
+            <span class="bar-pct">78%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Rahul Verma</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2563eb,#8b5cf6)" data-width="65"></div></div>
+            <span class="bar-pct">65%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Sneha Patil</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2563eb,#8b5cf6)" data-width="58"></div></div>
+            <span class="bar-pct">58%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Dev Kapoor</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:linear-gradient(90deg,#2563eb,#8b5cf6)" data-width="44"></div></div>
+            <span class="bar-pct">44%</span>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card reveal reveal-delay-2">
+        <h3><i class="fa-solid fa-chart-pie" style="color:var(--purple-500);margin-right:8px"></i>Skill Match Breakdown</h3>
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#e2e8f0" stroke-width="3"/>
+            <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="url(#g1)" stroke-width="3.5"
+              stroke-dasharray="57 100" stroke-dashoffset="25" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#f59e0b" stroke-width="3.5"
+              stroke-dasharray="24 100" stroke-dashoffset="-32" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#ef4444" stroke-width="3.5"
+              stroke-dasharray="19 100" stroke-dashoffset="-56" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <text x="18" y="20" text-anchor="middle" font-size="5.5" font-weight="bold" fill="#1e293b">57%</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-row"><div class="legend-dot" style="background:linear-gradient(135deg,#2563eb,#8b5cf6)"></div>Matched Skills (57%)</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#f59e0b"></div>Partial Match (24%)</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div>Missing Skills (19%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEMO ── -->
+<section class="demo" id="demo">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-label"><i class="fa-solid fa-flask"></i> Interactive Demo</div>
+      <h2 class="section-title" style="color:#fff;">Resume Screening <span>in Action</span></h2>
+      <p class="section-sub">Paste a resume and job description to see how the ML model scores and ranks the candidate in real time.</p>
+    </div>
+
+    <div class="demo-grid">
+      <div class="reveal">
+        <div class="demo-input-card">
+          <h3><i class="fa-solid fa-file-lines" style="margin-right:6px"></i>Resume Input</h3>
+          <div class="demo-label">Candidate Resume Text</div>
+          <textarea class="demo-textarea" id="resumeText" rows="5">Experienced Python Developer with 5+ years in Machine Learning, SQL, Data Analysis, TensorFlow, and NLP. Built end-to-end ML pipelines and deployed models using scikit-learn. Strong communication and teamwork skills.</textarea>
+
+          <div class="demo-label">Job Description</div>
+          <textarea class="demo-textarea" id="jdText" rows="4">Looking for a Machine Learning Engineer skilled in Python, NLP, TensorFlow, SQL, Docker, and AWS. Experience with model deployment, data pipelines, and cloud infrastructure required.</textarea>
+
+          <div class="demo-label">Job Role</div>
+          <select class="demo-select" id="jobRole" onchange="prefillRole()">
+            <optgroup label="── Data & Analytics ──">
+              <option>Machine Learning Engineer</option>
+              <option>Data Scientist</option>
+              <option>Data Analyst</option>
+              <option>Business Intelligence Analyst</option>
+              <option>Data Engineer</option>
+              <option>Statistician / Quantitative Analyst</option>
+            </optgroup>
+            <optgroup label="── AI & Research ──">
+              <option>NLP Engineer</option>
+              <option>AI Research Scientist</option>
+              <option>Computer Vision Engineer</option>
+              <option>MLOps Engineer</option>
+              <option>Generative AI Engineer</option>
+            </optgroup>
+            <optgroup label="── Software Engineering ──">
+              <option>Backend Engineer (Python)</option>
+              <option>Full Stack Developer</option>
+              <option>DevOps / Cloud Engineer</option>
+              <option>Cybersecurity Analyst</option>
+            </optgroup>
+          </select>
+
+          <button class="demo-btn" onclick="runDemo()">
+            <i class="fa-solid fa-bolt"></i> Analyze Resume
+          </button>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-2">
+        <div class="result-card" id="resultCard">
+          <div class="result-header">
+            <h3><i class="fa-solid fa-chart-line" style="margin-right:6px"></i>Prediction Output</h3>
+            <span class="status-badge" id="statusBadge">Highly Recommended</span>
+          </div>
+
+          <div class="score-ring">
+            <svg class="ring-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="url(#rg1)" stroke-width="3.5"
+                id="scoreArc" stroke-dasharray="91 100" stroke-dashoffset="25" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="rg1" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+              <text x="18" y="16" text-anchor="middle" font-size="6" font-weight="bold" fill="white" id="scoreText">91%</text>
+              <text x="18" y="22" text-anchor="middle" font-size="3" fill="rgba(255,255,255,0.4)">Match Score</text>
+            </svg>
+          </div>
+
+          <div class="result-rows">
+            <div class="result-row">
+              <span class="result-row-label"><i class="fa-solid fa-ranking-star"></i> Rank</span>
+              <span class="result-row-val" id="rankVal">#1 of 5 Candidates</span>
+            </div>
+            <div class="result-row">
+              <span class="result-row-label"><i class="fa-solid fa-wave-square"></i> Similarity Score</span>
+              <span class="result-row-val" id="simVal">0.91</span>
+            </div>
+            <div class="result-row">
+              <span class="result-row-label"><i class="fa-solid fa-briefcase"></i> Role Match</span>
+              <span class="result-row-val" id="roleVal">ML Engineer</span>
+            </div>
+          </div>
+
+          <div class="skills-section">
+            <h4><i class="fa-solid fa-check" style="color:#4ade80;margin-right:4px"></i>Matching Skills</h4>
+            <div class="skills-row" id="matchingSkills">
+              <span class="skill-chip">Python</span>
+              <span class="skill-chip">Machine Learning</span>
+              <span class="skill-chip">SQL</span>
+              <span class="skill-chip">NLP</span>
+              <span class="skill-chip">TensorFlow</span>
+            </div>
+            <h4><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:4px"></i>Missing Skills</h4>
+            <div class="skills-row" id="missingSkills">
+              <span class="skill-chip missing">Docker</span>
+              <span class="skill-chip missing">AWS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH STACK ── -->
+<section class="tech" id="tech">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="section-label"><i class="fa-solid fa-layer-group"></i> Technology</div>
+      <h2 class="section-title">Tech <span>Stack</span></h2>
+      <p class="section-sub">Built with industry-standard ML and NLP libraries to ensure accuracy, speed, and reproducibility.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="tech-icon" style="background:rgba(37,99,235,0.1)"><i class="fa-brands fa-python" style="color:#2563eb;font-size:1.4rem"></i></div>
+        <div>
+          <h4>Python & Core ML</h4>
+          <p>Primary language for ML pipeline, data processing, and model training.</p>
+          <div class="tech-tags">
+            <span class="tag tag-blue">Python 3.11</span>
+            <span class="tag tag-blue">scikit-learn</span>
+            <span class="tag tag-blue">pandas</span>
+            <span class="tag tag-blue">NumPy</span>
+          </div>
+        </div>
+      </div>
+      <div class="tech-card reveal reveal-delay-1">
+        <div class="tech-icon" style="background:rgba(139,92,246,0.1)"><i class="fa-solid fa-language" style="color:#8b5cf6;font-size:1.2rem"></i></div>
+        <div>
+          <h4>NLP & Text Processing</h4>
+          <p>Named entity recognition, tokenization, and skill extraction pipelines.</p>
+          <div class="tech-tags">
+            <span class="tag tag-purple">spaCy</span>
+            <span class="tag tag-purple">NLTK</span>
+            <span class="tag tag-purple">TF-IDF</span>
+            <span class="tag tag-purple">Regex</span>
+          </div>
+        </div>
+      </div>
+      <div class="tech-card reveal reveal-delay-2">
+        <div class="tech-icon" style="background:rgba(16,185,129,0.1)"><i class="fa-solid fa-file-pdf" style="color:#059669;font-size:1.2rem"></i></div>
+        <div>
+          <h4>Document Parsing</h4>
+          <p>Extract raw text from resumes in PDF and DOCX formats reliably.</p>
+          <div class="tech-tags">
+            <span class="tag tag-green">PyMuPDF</span>
+            <span class="tag tag-green">pdfplumber</span>
+            <span class="tag tag-green">python-docx</span>
+          </div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-icon" style="background:rgba(37,99,235,0.1)"><i class="fa-solid fa-calculator" style="color:#2563eb;font-size:1.2rem"></i></div>
+        <div>
+          <h4>Similarity & Ranking</h4>
+          <p>Compute cosine similarity between vectorized resumes and job descriptions.</p>
+          <div class="tech-tags">
+            <span class="tag tag-blue">Cosine Similarity</span>
+            <span class="tag tag-blue">TF-IDF Vectors</span>
+            <span class="tag tag-blue">sklearn</span>
+          </div>
+        </div>
+      </div>
+      <div class="tech-card reveal reveal-delay-1">
+        <div class="tech-icon" style="background:rgba(139,92,246,0.1)"><i class="fa-solid fa-chart-bar" style="color:#8b5cf6;font-size:1.2rem"></i></div>
+        <div>
+          <h4>Visualization</h4>
+          <p>Interactive charts and dashboards for ranking, scores, and skill comparisons.</p>
+          <div class="tech-tags">
+            <span class="tag tag-purple">Matplotlib</span>
+            <span class="tag tag-purple">Seaborn</span>
+            <span class="tag tag-purple">Plotly</span>
+          </div>
+        </div>
+      </div>
+      <div class="tech-card reveal reveal-delay-2">
+        <div class="tech-icon" style="background:rgba(16,185,129,0.1)"><i class="fa-solid fa-server" style="color:#059669;font-size:1.2rem"></i></div>
+        <div>
+          <h4>Deployment</h4>
+          <p>Serve the model as a REST API with a clean Streamlit or Flask frontend.</p>
+          <div class="tech-tags">
+            <span class="tag tag-green">Flask</span>
+            <span class="tag tag-green">Streamlit</span>
+            <span class="tag tag-green">Jupyter</span>
+            <span class="tag tag-green">GitHub</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="icon"><i class="fa-solid fa-brain"></i></div>
+      <span>ResumeAI</span>
+    </div>
+    <div class="footer-copy">© 2026 AI Resume Screening & Candidate Ranking System. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="#hero">Home</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#demo">Demo</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── Mobile menu ── */
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+
+  /* ── Scroll reveal ── */
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  /* ── Animated counters ── */
+  function animateCount(el) {
+    const target = parseInt(el.dataset.count);
+    const suffix = el.textContent.includes('%') ? '%' : (el.textContent.includes('+') ? '+' : '');
+    const duration = 1600;
+    const step = target / (duration / 16);
+    let current = 0;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current) + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  const counterObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !e.target.dataset.animated) {
+        e.target.dataset.animated = '1';
+        animateCount(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(el => counterObs.observe(el));
+
+  /* ── Bar chart animation ── */
+  const barObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.bar-fill[data-width]').forEach(bar => {
+          setTimeout(() => { bar.style.width = bar.dataset.width + '%'; }, 200);
+        });
+        barObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  const barChart = document.querySelector('.bar-chart');
+  if (barChart) barObs.observe(barChart);
+
+  /* ── Demo logic ── */
+  const SKILLS_DB = {
+    matching: {
+      'Machine Learning Engineer':      ['Python','Machine Learning','SQL','NLP','TensorFlow','scikit-learn'],
+      'Data Scientist':                  ['Python','SQL','Data Analysis','pandas','Statistics','Matplotlib'],
+      'Data Analyst':                    ['SQL','Excel','Tableau','Power BI','Python','Data Visualization'],
+      'Business Intelligence Analyst':   ['Power BI','Tableau','SQL','DAX','Excel','Data Modeling'],
+      'Data Engineer':                   ['Python','SQL','Apache Spark','Hadoop','ETL','Airflow'],
+      'Statistician / Quantitative Analyst': ['R','Python','Statistics','Probability','Regression','SPSS'],
+      'NLP Engineer':                    ['Python','NLP','spaCy','NLTK','Transformers','BERT'],
+      'AI Research Scientist':           ['Python','Deep Learning','TensorFlow','PyTorch','Research','Mathematics'],
+      'Computer Vision Engineer':        ['Python','OpenCV','PyTorch','CNNs','Image Processing','YOLO'],
+      'MLOps Engineer':                  ['Python','Docker','Kubernetes','MLflow','CI/CD','Airflow'],
+      'Generative AI Engineer':          ['Python','LangChain','OpenAI API','Prompt Engineering','RAG','Vector DB'],
+      'Backend Engineer (Python)':       ['Python','Django','Flask','REST API','SQL','Docker'],
+      'Full Stack Developer':            ['JavaScript','React','Node.js','HTML','CSS','MongoDB'],
+      'DevOps / Cloud Engineer':         ['AWS','Azure','Docker','Kubernetes','Terraform','CI/CD'],
+      'Cybersecurity Analyst':           ['Network Security','SIEM','Python','Penetration Testing','Firewalls','Risk Analysis']
+    },
+    missing: {
+      'Machine Learning Engineer':      ['Docker','AWS','Kubernetes'],
+      'Data Scientist':                  ['Power BI','Azure ML','Apache Spark'],
+      'Data Analyst':                    ['Advanced SQL','Google Analytics','Looker'],
+      'Business Intelligence Analyst':   ['Azure Synapse','Python','Looker Studio'],
+      'Data Engineer':                   ['Kafka','dbt','Snowflake'],
+      'Statistician / Quantitative Analyst': ['SAS','Power BI','Machine Learning'],
+      'NLP Engineer':                    ['Hugging Face','GPT Fine-tuning','LangChain'],
+      'AI Research Scientist':           ['CUDA','Distributed Training','C++'],
+      'Computer Vision Engineer':        ['TensorRT','3D Vision','Diffusion Models'],
+      'MLOps Engineer':                  ['Prometheus','Grafana','Seldon'],
+      'Generative AI Engineer':          ['Fine-tuning LLMs','RLHF','Weaviate'],
+      'Backend Engineer (Python)':       ['Redis','Kafka','Microservices'],
+      'Full Stack Developer':            ['TypeScript','GraphQL','AWS'],
+      'DevOps / Cloud Engineer':         ['GCP','Ansible','Helm'],
+      'Cybersecurity Analyst':           ['Splunk','Metasploit','Forensics']
+    }
+  };
+
+  const ROLE_PREFILL = {
+    'Machine Learning Engineer': {
+      resume: 'Experienced Python Developer with 5+ years in Machine Learning, SQL, Data Analysis, TensorFlow, NLP, and scikit-learn. Built end-to-end ML pipelines. Strong communication and teamwork skills.',
+      jd: 'Looking for a Machine Learning Engineer skilled in Python, NLP, TensorFlow, SQL, Docker, and AWS. Experience with model deployment, data pipelines, and cloud infrastructure required.'
+    },
+    'Data Analyst': {
+      resume: 'Data Analyst with 3 years experience in SQL, Excel, Tableau, Power BI, Python scripting, and Data Visualization. Delivered dashboards and reports for business stakeholders.',
+      jd: 'Hiring a Data Analyst proficient in SQL, Tableau, Power BI, Excel, and Python. Must have Advanced SQL, Google Analytics, and Looker experience. Strong communication skills.'
+    },
+    'Business Intelligence Analyst': {
+      resume: 'BI Analyst with 4 years experience building Power BI dashboards, Tableau reports, SQL queries, DAX formulas, Excel models, and Data Modeling solutions for leadership teams.',
+      jd: 'We need a BI Analyst with Power BI, Tableau, SQL, DAX, Excel, Azure Synapse, Python, and Looker Studio experience. Must deliver executive reporting dashboards.'
+    },
+    'Data Scientist': {
+      resume: 'Data Scientist with expertise in Python, SQL, pandas, Statistics, Matplotlib, and Machine Learning. Delivered predictive models and data analysis reports for product teams.',
+      jd: 'Looking for a Data Scientist with Python, SQL, pandas, Statistics, Matplotlib, Power BI, Azure ML, and Apache Spark skills. PhD or equivalent experience preferred.'
+    },
+    'Data Engineer': {
+      resume: 'Data Engineer skilled in Python, SQL, Apache Spark, Hadoop, ETL pipeline design, and Apache Airflow. Built scalable data infrastructure for cloud-based platforms.',
+      jd: 'Hiring a Data Engineer with Python, SQL, Spark, Hadoop, ETL, Airflow, Kafka, dbt, and Snowflake expertise. Experience with cloud data warehouses required.'
+    },
+    'NLP Engineer': {
+      resume: 'NLP Engineer with Python, spaCy, NLTK, Transformers, and BERT expertise. Built text classification, NER, and sentiment analysis systems for production applications.',
+      jd: 'Looking for an NLP Engineer with Python, spaCy, NLTK, Transformers, BERT, Hugging Face, GPT fine-tuning, and LangChain skills. Conversational AI experience a plus.'
+    },
+    'Computer Vision Engineer': {
+      resume: 'Computer Vision Engineer with Python, OpenCV, PyTorch, CNNs, Image Processing, and YOLO experience. Developed object detection and image segmentation systems.',
+      jd: 'Hiring a Computer Vision Engineer with Python, OpenCV, PyTorch, CNNs, YOLO, TensorRT, 3D Vision, and Diffusion Models knowledge. Robotics experience preferred.'
+    },
+    'MLOps Engineer': {
+      resume: 'MLOps Engineer experienced in Python, Docker, Kubernetes, MLflow, CI/CD pipelines, and Apache Airflow. Managed model deployment and monitoring for enterprise ML systems.',
+      jd: 'Looking for an MLOps Engineer with Python, Docker, Kubernetes, MLflow, CI/CD, Airflow, Prometheus, Grafana, and Seldon experience. Cloud deployment required.'
+    },
+    'Generative AI Engineer': {
+      resume: 'Generative AI Engineer with Python, LangChain, OpenAI API, Prompt Engineering, RAG architecture, and Vector DB knowledge. Built LLM-powered applications and chatbots.',
+      jd: 'Hiring a Generative AI Engineer with Python, LangChain, OpenAI API, Prompt Engineering, RAG, Vector DB, LLM fine-tuning, RLHF, and Weaviate skills.'
+    },
+    'Backend Engineer (Python)': {
+      resume: 'Backend Engineer with Python, Django, Flask, REST API design, SQL, and Docker experience. Built scalable microservices and APIs for high-traffic applications.',
+      jd: 'Looking for a Python Backend Engineer with Django, Flask, REST API, SQL, Docker, Redis, Kafka, and Microservices experience. Cloud deployment experience required.'
+    },
+    'Full Stack Developer': {
+      resume: 'Full Stack Developer with JavaScript, React, Node.js, HTML, CSS, and MongoDB expertise. Delivered responsive web applications and RESTful APIs for SaaS products.',
+      jd: 'Hiring a Full Stack Developer with JavaScript, React, Node.js, HTML, CSS, MongoDB, TypeScript, GraphQL, and AWS skills. Agile experience preferred.'
+    },
+    'DevOps / Cloud Engineer': {
+      resume: 'DevOps Engineer with AWS, Azure, Docker, Kubernetes, Terraform, and CI/CD pipeline experience. Automated cloud infrastructure and deployment workflows for enterprise systems.',
+      jd: 'Looking for a DevOps Engineer with AWS, Azure, Docker, Kubernetes, Terraform, CI/CD, GCP, Ansible, and Helm experience. Site reliability engineering preferred.'
+    },
+    'Cybersecurity Analyst': {
+      resume: 'Cybersecurity Analyst with Network Security, SIEM platforms, Python scripting, Penetration Testing, Firewalls, and Risk Analysis expertise. Conducted security audits and vulnerability assessments.',
+      jd: 'Hiring a Cybersecurity Analyst with Network Security, SIEM, Python, Penetration Testing, Firewalls, Risk Analysis, Splunk, Metasploit, and Forensics skills.'
+    },
+    'AI Research Scientist': {
+      resume: 'AI Research Scientist with Python, Deep Learning, TensorFlow, PyTorch, academic research background, and strong Mathematics foundation. Published papers on neural network architectures.',
+      jd: 'Looking for an AI Research Scientist with Python, Deep Learning, TensorFlow, PyTorch, Research, Mathematics, CUDA, Distributed Training, and C++ expertise.'
+    },
+    'Statistician / Quantitative Analyst': {
+      resume: 'Quantitative Analyst with R, Python, Statistics, Probability, Regression analysis, and SPSS expertise. Delivered statistical models for financial forecasting and risk analysis.',
+      jd: 'Hiring a Statistician with R, Python, Statistics, Probability, Regression, SPSS, SAS, Power BI, and Machine Learning skills for quantitative research role.'
+    }
+  };
+
+  function prefillRole() {
+    const role = document.getElementById('jobRole').value;
+    const data = ROLE_PREFILL[role];
+    if (data) {
+      document.getElementById('resumeText').value = data.resume;
+      document.getElementById('jdText').value = data.jd;
+    }
+  }
+
+  function runDemo() {
+    const btn = document.querySelector('.demo-btn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing…';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      const role = document.getElementById('jobRole').value;
+      const resume = document.getElementById('resumeText').value.toLowerCase();
+
+      // Simple heuristic score
+      const keywords = (SKILLS_DB.matching[role] || []);
+      const found = keywords.filter(k => resume.includes(k.toLowerCase()));
+      const score = Math.min(95, Math.round((found.length / Math.max(keywords.length, 1)) * 100 + Math.random() * 5));
+
+      // Update ring
+      document.getElementById('scoreArc').setAttribute('stroke-dasharray', `${score} 100`);
+      document.getElementById('scoreText').textContent = score + '%';
+      document.getElementById('simVal').textContent = (score / 100).toFixed(2);
+      document.getElementById('roleVal').textContent = role;
+
+      // Status
+      const badge = document.getElementById('statusBadge');
+      if (score >= 80) { badge.textContent = 'Highly Recommended'; badge.style.background = 'rgba(74,222,128,0.2)'; badge.style.borderColor = 'rgba(74,222,128,0.4)'; badge.style.color = '#4ade80'; }
+      else if (score >= 60) { badge.textContent = 'Consider'; badge.style.background = 'rgba(251,191,36,0.2)'; badge.style.borderColor = 'rgba(251,191,36,0.4)'; badge.style.color = '#fbbf24'; }
+      else { badge.textContent = 'Not Recommended'; badge.style.background = 'rgba(239,68,68,0.2)'; badge.style.borderColor = 'rgba(239,68,68,0.4)'; badge.style.color = '#f87171'; }
+
+      // Rank
+      const rank = score >= 80 ? '#1' : score >= 60 ? '#2' : '#3';
+      document.getElementById('rankVal').textContent = rank + ' of 5 Candidates';
+
+      // Skills
+      const matching = found.length ? found : ['Python','ML'];
+      const missing = SKILLS_DB.missing[role] || ['Docker','AWS'];
+      document.getElementById('matchingSkills').innerHTML = matching.map(s => `<span class="skill-chip">${s}</span>`).join('');
+      document.getElementById('missingSkills').innerHTML = missing.map(s => `<span class="skill-chip missing">${s}</span>`).join('');
+
+      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Analyze Resume';
+      btn.disabled = false;
+    }, 1400);
+  }
+</script>
+</body>
+</html>
