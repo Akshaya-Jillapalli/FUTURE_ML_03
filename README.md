@@ -1,0 +1,1 @@
+A modern, responsive NLP-powered system that analyzes resumes, extracts skills, compares them with job descriptions, ranks candidates by fit, and highlights missing skills. Features SaaS-style UI, smooth animations, interactive demo, and dashboard analytics.
